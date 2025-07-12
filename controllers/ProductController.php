@@ -13,6 +13,7 @@ class ProductController {
         $this->review = new Review($this->db);
     }
     public function index() {
+        $action = 'products';
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = 12;
         $offset = ($page - 1) * $limit;
@@ -33,6 +34,7 @@ class ProductController {
     }
 
     public function detail($id) {
+        $action = 'product_detail';
         $product = $this->product->getById($id);
         if(!$product) {
             redirect('404');

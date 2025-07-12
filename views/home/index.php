@@ -10,7 +10,7 @@
                 <p class="lead mb-4 fade-in">
                     Khám phá hàng ngàn sản phẩm công nghệ chính hãng với giá tốt nhất
                 </p>
-                <a href="<?php echo BASE_URL; ?>?action=products" class="btn btn-primary btn-lg fade-in">
+                <a href="<?php echo BASE_URL; ?>products" class="btn btn-primary btn-lg fade-in">
                     <i class="fas fa-shopping-bag me-2"></i>Mua sắm ngay
                 </a>
             </div>
@@ -33,7 +33,7 @@
                     <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
                     <h5 class="card-title"><?php echo $category['name']; ?></h5>
                     <p class="card-text"><?php echo $category['description']; ?></p>
-                    <a href="<?php echo BASE_URL; ?>?action=products&category=<?php echo $category['id']; ?>" 
+                    <a href="<?php echo BASE_URL; ?>products?category=<?php echo $category['id']; ?>" 
                        class="btn btn-outline-primary">Xem sản phẩm</a>
                 </div>
             </div>
@@ -64,15 +64,14 @@
                             <?php endif; ?>
                         </div>
                         <div>
-                            <a href="<?php echo BASE_URL; ?>?action=product_detail&id=<?php echo $product['id']; ?>" 
+                            <a href="<?php echo BASE_URL; ?>product_detail/<?php echo $product['id']; ?>" 
                                class="btn btn-sm btn-outline-primary me-1">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <?php if(isLoggedIn()): ?>
-                            <form style="display: inline-block;">
-                                <input type="hidden" name="action" value="cart">
-                                <input type="hidden" name="cart_action" value="add">
+                            <form style="display: inline-block;" action="<?php echo BASE_URL; ?>add-to-cart" method="POST">
                                 <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                <input type="hidden" name="quantity" value="1">
                                 <button type="submit" class="btn btn-sm btn-cart">
                                     <i class="fas fa-cart-plus"></i>
                                 </button>

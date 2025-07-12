@@ -52,7 +52,7 @@
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-search"></i> Tìm kiếm
                                     </button>
-                                    <a href="products" class="btn btn-secondary">
+                                    <a href="<?php echo BASE_URL; ?>admin-products" class="btn btn-secondary">
                                         <i class="fas fa-times"></i> Xóa bộ lọc
                                     </a>
                                 </div>
@@ -248,7 +248,7 @@
 function editProduct(productId) {
     // Load thông tin sản phẩm
     $.ajax({
-        url: 'get-product/' + productId,
+        url: '<?php echo BASE_URL; ?>get-product/' + productId,
         type: 'GET',
         dataType: 'json',
         success: function(response) {
@@ -277,7 +277,7 @@ function editProduct(productId) {
 function deleteProduct(productId) {
     if(confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
         $.ajax({
-            url: 'delete-product',
+            url: '<?php echo BASE_URL; ?>delete-product',
             type: 'POST',
             data: {
                 product_id: productId
@@ -304,7 +304,7 @@ $('#productForm').on('submit', function(e) {
     var formData = new FormData(this);
     
     $.ajax({
-        url: 'save-product',
+        url: '<?php echo BASE_URL; ?>save-product',
         type: 'POST',
         data: formData,
         processData: false,

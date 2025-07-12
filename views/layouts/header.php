@@ -235,17 +235,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo BASE_URL; ?>?action=products">
+                    <a class="nav-link" href="<?php echo BASE_URL; ?>products">
                         <i class="fas fa-box me-1"></i>Sản phẩm
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo BASE_URL; ?>?action=articles">
+                    <a class="nav-link" href="<?php echo BASE_URL; ?>articles">
                         <i class="fas fa-newspaper me-1"></i>Bài viết
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo BASE_URL; ?>?action=cart">
+                    <a class="nav-link" href="<?php echo BASE_URL; ?>cart">
                         <i class="fas fa-shopping-cart me-1"></i>Giỏ hàng
                         <?php if(isLoggedIn()): ?>
                             <span class="badge bg-danger ms-1">0</span>
@@ -255,8 +255,7 @@
             </ul>
             
             <!-- Search Form -->
-            <form class="d-flex me-3" method="GET" action="<?php echo BASE_URL; ?>">
-                <input type="hidden" name="action" value="products">
+            <form class="d-flex me-3" method="GET" action="<?php echo BASE_URL; ?>products">
                 <input class="form-control search-box me-2" type="search" name="search" 
                        placeholder="Tìm kiếm sản phẩm..." value="<?php echo $_GET['search'] ?? ''; ?>">
                 <button class="btn btn-outline-light" type="submit">
@@ -273,28 +272,28 @@
                             <i class="fas fa-user me-1"></i><?php echo $_SESSION['user_name']; ?>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>?action=profile">
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>profile">
                                 <i class="fas fa-user-cog me-2"></i>Thông tin cá nhân</a></li>
-                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>?action=orders">
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>orders">
                                 <i class="fas fa-shopping-bag me-2"></i>Đơn hàng của tôi</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <?php if(isAdmin()): ?>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>?action=admin">
+                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>admin">
                                     <i class="fas fa-chart-bar me-2"></i>Dashboard</a></li>
                                 <li><hr class="dropdown-divider"></li>
                             <?php endif; ?>
-                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>?action=logout">
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>logout">
                                 <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                         </ul>
                     </li>
                 <?php else: ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>?action=login">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>login">
                             <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo BASE_URL; ?>?action=register">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>register">
                             <i class="fas fa-user-plus me-1"></i>Đăng ký
                         </a>
                     </li>

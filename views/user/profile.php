@@ -115,7 +115,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="order-detail/<?php echo $order['id']; ?>" class="btn btn-sm btn-info">Chi tiết</a>
+                                            <a href="<?php echo BASE_URL; ?>order-detail/<?php echo $order['id']; ?>" class="btn btn-sm btn-info">Chi tiết</a>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -137,7 +137,7 @@ $(document).ready(function() {
         var formData = $(this).serialize();
         
         $.ajax({
-            url: 'change-password',
+            url: '<?php echo BASE_URL; ?>change-password',
             type: 'POST',
             data: formData,
             dataType: 'json',

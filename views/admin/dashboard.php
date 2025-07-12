@@ -164,7 +164,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="order-detail/<?php echo $order['id']; ?>" class="btn btn-sm btn-info">
+                                                <a href="<?php echo BASE_URL; ?>order-detail/<?php echo $order['id']; ?>" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>

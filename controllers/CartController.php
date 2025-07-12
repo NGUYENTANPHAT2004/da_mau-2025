@@ -17,6 +17,7 @@ class CartController {
             return;
         }
         
+        $action = 'cart';
         $cart_items = $this->cart->getCartItems($_SESSION['user_id']);
         $cart_total = $this->cart->getCartTotal($_SESSION['user_id']);
         

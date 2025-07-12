@@ -46,7 +46,7 @@
                     <hr>
                     <div class="text-center">
                         <p>Chưa có tài khoản? 
-                            <a href="<?php echo BASE_URL; ?>?action=register" class="text-decoration-none">
+                            <a href="<?php echo BASE_URL; ?>register" class="text-decoration-none">
                                 Đăng ký ngay
                             </a>
                         </p>

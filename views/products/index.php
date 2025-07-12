@@ -10,12 +10,12 @@
                 <!-- Categories -->
                 <h6>Danh mục</h6>
                 <div class="list-group list-group-flush">
-                    <a href="<?php echo BASE_URL; ?>?action=products" 
+                    <a href="<?php echo BASE_URL; ?>products" 
                        class="list-group-item list-group-item-action <?php echo !isset($_GET['category']) ? 'active' : ''; ?>">
                         Tất cả sản phẩm
                     </a>
                     <?php foreach($categories as $category): ?>
-                    <a href="<?php echo BASE_URL; ?>?action=products&category=<?php echo $category['id']; ?>" 
+                    <a href="<?php echo BASE_URL; ?>products?category=<?php echo $category['id']; ?>" 
                        class="list-group-item list-group-item-action <?php echo ($_GET['category'] ?? '') == $category['id'] ? 'active' : ''; ?>">
                         <?php echo $category['name']; ?>
                     </a>
@@ -103,20 +103,20 @@
                                     <span class="badge bg-success">Còn hàng</span>
                                 </div>
                                 <div class="d-grid gap-2">
-                                    <a href="<?php echo BASE_URL; ?>?action=product_detail&id=<?php echo $product['id']; ?>" 
+                                    <a href="<?php echo BASE_URL; ?>product_detail/<?php echo $product['id']; ?>" 
                                        class="btn btn-outline-primary">
                                         <i class="fas fa-eye me-2"></i>Xem chi tiết
                                     </a>
                                     <?php if(isLoggedIn()): ?>
-                                    <form method="POST" action="<?php echo BASE_URL; ?>?action=cart">
-                                        <input type="hidden" name="cart_action" value="add">
+                                    <form method="POST" action="<?php echo BASE_URL; ?>add-to-cart">
                                         <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+                                        <input type="hidden" name="quantity" value="1">
                                         <button type="submit" class="btn btn-cart w-100">
                                             <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
                                         </button>
                                     </form>
                                     <?php else: ?>
-                                    <a href="<?php echo BASE_URL; ?>?action=login" class="btn btn-cart">
+                                    <a href="<?php echo BASE_URL; ?>login" class="btn btn-cart">
                                         <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để mua
                                     </a>
                                     <?php endif; ?>

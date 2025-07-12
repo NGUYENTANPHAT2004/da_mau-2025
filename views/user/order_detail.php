@@ -3,7 +3,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Chi tiết đơn hàng #<?php echo $order['id']; ?></h2>
-                <a href="orders" class="btn btn-outline-primary">
+                <a href="<?php echo BASE_URL; ?>orders" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left"></i> Quay lại
                 </a>
             </div>

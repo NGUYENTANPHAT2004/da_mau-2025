@@ -106,7 +106,7 @@
                         </form>
                     <?php else: ?>
                         <div class="alert alert-info">
-                            <a href="login">Đăng nhập</a> để đánh giá sản phẩm này.
+                            <a href="<?php echo BASE_URL; ?>login">Đăng nhập</a> để đánh giá sản phẩm này.
                         </div>
                     <?php endif; ?>
 
@@ -151,7 +151,7 @@ $(document).ready(function() {
         var formData = $(this).serialize();
         
         $.ajax({
-            url: 'add-to-cart',
+            url: '<?php echo BASE_URL; ?>add-to-cart',
             type: 'POST',
             data: formData,
             dataType: 'json',
@@ -179,7 +179,7 @@ $(document).ready(function() {
         var formData = $(this).serialize();
         
         $.ajax({
-            url: 'add-review',
+            url: '<?php echo BASE_URL; ?>add-review',
             type: 'POST',
             data: formData,
             dataType: 'json',

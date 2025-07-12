@@ -17,6 +17,7 @@ class UserController {
             return;
         }
 
+        $action = 'login';
         $error = '';
         if($_POST) {
             $email = $_POST['email'];
@@ -45,6 +46,7 @@ class UserController {
             return;
         }
 
+        $action = 'register';
         $error = '';
         $success = '';
         
@@ -78,6 +80,7 @@ class UserController {
             return;
         }
 
+        $action = 'profile';
         $user_info = $this->user->getUserById($_SESSION['user_id']);
         $user_orders = $this->order->getUserOrders($_SESSION['user_id']);
         
@@ -141,6 +144,7 @@ class UserController {
             return;
         }
 
+        $action = 'orders';
         $orders = $this->order->getUserOrders($_SESSION['user_id']);
         
         include 'views/layouts/header.php';
@@ -154,6 +158,7 @@ class UserController {
             return;
         }
 
+        $action = 'order_detail';
         $order = $this->order->getById($order_id);
         
         // Kiểm tra quyền xem đơn hàng

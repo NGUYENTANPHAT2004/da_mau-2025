@@ -12,6 +12,7 @@ class HomeController {
     }
 
     public function index() {
+        $action = 'home';
         $featured_products = $this->product->getAll(8);
         $categories = $this->category->getAll();
         

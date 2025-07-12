@@ -6,7 +6,7 @@
             <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
             <h4 class="text-muted">Giỏ hàng trống</h4>
             <p class="text-muted">Bạn chưa có sản phẩm nào trong giỏ hàng.</p>
-            <a href="products" class="btn btn-primary">Tiếp tục mua sắm</a>
+            <a href="<?php echo BASE_URL; ?>products" class="btn btn-primary">Tiếp tục mua sắm</a>
         </div>
     <?php else: ?>
         <div class="row">
@@ -116,7 +116,7 @@
                         </button>
                         
                         <div class="text-center mt-3">
-                            <a href="products" class="btn btn-outline-primary">
+                            <a href="<?php echo BASE_URL; ?>products" class="btn btn-outline-primary">
                                 <i class="fas fa-arrow-left"></i> Tiếp tục mua sắm
                             </a>
                         </div>
@@ -137,7 +137,7 @@ function updateQuantity(productId, quantity) {
     }
     
     $.ajax({
-        url: 'update-cart',
+        url: '<?php echo BASE_URL; ?>update-cart',
         type: 'POST',
         data: {
             product_id: productId,
@@ -163,7 +163,7 @@ function updateQuantity(productId, quantity) {
 function removeItem(productId) {
     if(confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?')) {
         $.ajax({
-            url: 'remove-from-cart',
+            url: '<?php echo BASE_URL; ?>remove-from-cart',
             type: 'POST',
             data: {
                 product_id: productId
@@ -189,7 +189,7 @@ function removeItem(productId) {
 function clearCart() {
     if(confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
         $.ajax({
-            url: 'clear-cart',
+            url: '<?php echo BASE_URL; ?>clear-cart',
             type: 'POST',
             dataType: 'json',
             success: function(response) {

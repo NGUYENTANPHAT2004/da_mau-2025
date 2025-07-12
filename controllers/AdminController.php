@@ -21,6 +21,7 @@ class AdminController {
     }
 
     public function dashboard() {
+        $action = 'admin';
         $stats = $this->analytics->getDashboardStats();
         $monthly_revenue = $this->analytics->getMonthlyRevenue();
         $top_products = $this->analytics->getTopProducts(5);
@@ -32,6 +33,7 @@ class AdminController {
     }
 
     public function products() {
+        $action = 'admin_products';
         if($_POST) {
             // Xử lý thêm/sửa sản phẩm
             $this->handleProductForm();
@@ -45,6 +47,7 @@ class AdminController {
     }
 
     public function articles() {
+        $action = 'admin_articles';
         if($_POST) {
             // Xử lý thêm/sửa bài viết
             $this->handleArticleForm();
@@ -58,6 +61,7 @@ class AdminController {
     }
 
     public function orders() {
+        $action = 'admin_orders';
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = 20;
         $offset = ($page - 1) * $limit;

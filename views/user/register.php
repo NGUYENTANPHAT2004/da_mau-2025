@@ -78,7 +78,7 @@
                     <hr>
                     <div class="text-center">
                         <p>Đã có tài khoản? 
-                            <a href="<?php echo BASE_URL; ?>?action=login" class="text-decoration-none">
+                            <a href="<?php echo BASE_URL; ?>login" class="text-decoration-none">
                                 Đăng nhập ngay
                             </a>
                         </p>

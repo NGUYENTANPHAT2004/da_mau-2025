@@ -211,7 +211,7 @@
 function editArticle(articleId) {
     // Load thông tin bài viết
     $.ajax({
-        url: 'get-article/' + articleId,
+        url: '<?php echo BASE_URL; ?>get-article/' + articleId,
         type: 'GET',
         dataType: 'json',
         success: function(response) {
@@ -240,7 +240,7 @@ function editArticle(articleId) {
 function deleteArticle(articleId) {
     if(confirm('Bạn có chắc muốn xóa bài viết này?')) {
         $.ajax({
-            url: 'delete-article',
+            url: '<?php echo BASE_URL; ?>delete-article',
             type: 'POST',
             data: {
                 article_id: articleId
@@ -267,7 +267,7 @@ $('#articleForm').on('submit', function(e) {
     var formData = new FormData(this);
     
     $.ajax({
-        url: 'save-article',
+        url: '<?php echo BASE_URL; ?>save-article',
         type: 'POST',
         data: formData,
         processData: false,

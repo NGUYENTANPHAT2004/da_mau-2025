@@ -10,6 +10,7 @@ class ArticleController {
     }
 
     public function index() {
+        $action = 'articles';
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = 6;
         $offset = ($page - 1) * $limit;
@@ -28,6 +29,7 @@ class ArticleController {
     }
 
     public function detail($id) {
+        $action = 'article_detail';
         $article = $this->article->getById($id);
         if(!$article) {
             redirect('articles');

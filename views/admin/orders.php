@@ -43,7 +43,7 @@
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-search"></i> Tìm kiếm
                                     </button>
-                                    <a href="orders" class="btn btn-secondary">
+                                    <a href="<?php echo BASE_URL; ?>admin-orders" class="btn btn-secondary">
                                         <i class="fas fa-times"></i> Xóa bộ lọc
                                     </a>
                                 </div>
@@ -180,7 +180,7 @@
 function updateOrderStatus(orderId, status) {
     if(confirm('Bạn có chắc muốn cập nhật trạng thái đơn hàng này?')) {
         $.ajax({
-            url: 'update-order-status',
+            url: '<?php echo BASE_URL; ?>update-order-status',
             type: 'POST',
             data: {
                 order_id: orderId,
@@ -208,7 +208,7 @@ function viewOrderDetail(orderId) {
     $('#orderId').text(orderId);
     
     $.ajax({
-        url: 'get-order-detail/' + orderId,
+        url: '<?php echo BASE_URL; ?>get-order-detail/' + orderId,
         type: 'GET',
         dataType: 'json',
         success: function(response) {
@@ -290,7 +290,7 @@ function viewOrderDetail(orderId) {
 }
 
 function printInvoice(orderId) {
-    window.open('print-invoice/' + orderId, '_blank');
+    window.open('<?php echo BASE_URL; ?>print-invoice/' + orderId, '_blank');
 }
 
 function printInvoiceFromModal() {

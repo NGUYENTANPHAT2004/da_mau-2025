@@ -14,7 +14,7 @@
                             <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
                             <h4 class="text-muted">Chưa có đơn hàng nào</h4>
                             <p class="text-muted">Bạn chưa đặt đơn hàng nào.</p>
-                            <a href="products" class="btn btn-primary">Mua sắm ngay</a>
+                            <a href="<?php echo BASE_URL; ?>products" class="btn btn-primary">Mua sắm ngay</a>
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
@@ -43,7 +43,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="order-detail/<?php echo $order['id']; ?>" class="btn btn-sm btn-info">
+                                                <a href="<?php echo BASE_URL; ?>order-detail/<?php echo $order['id']; ?>" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> Chi tiết
                                                 </a>
                                             </td>
