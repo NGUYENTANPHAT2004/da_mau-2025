@@ -83,5 +83,29 @@ class Product {
         
         return $stmt->execute();
     }
+
+    public function update($id, $data) {
+        $query = "UPDATE " . $this->table_name . " 
+                  SET name = :name, description = :description, price = :price, sale_price = :sale_price, image = :image, category_id = :category_id, quantity = :quantity
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':name', $data['name']);
+        $stmt->bindParam(':description', $data['description']);
+        $stmt->bindParam(':price', $data['price']);
+        $stmt->bindParam(':sale_price', $data['sale_price']);
+        $stmt->bindParam(':image', $data['image']);
+        $stmt->bindParam(':category_id', $data['category_id']);
+        $stmt->bindParam(':quantity', $data['quantity']);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
+
+    public function delete($id) {
+        // Xóa mềm: chuyển status thành inactive
+        $query = "UPDATE " . $this->table_name . " SET status = 'inactive' WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
 }
 ?>

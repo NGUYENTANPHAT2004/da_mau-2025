@@ -75,6 +75,53 @@ class AdminController {
         include 'views/layouts/footer.php';
     }
 
+    public function categories() {
+        $action = 'admin_categories';
+        $categoryModel = new Category($this->db);
+        $categories = $categoryModel->getAll();
+        include 'views/layouts/header.php';
+        include 'views/admin/categories.php';
+        include 'views/layouts/footer.php';
+    }
+
+    public function getCategory($id) {
+        $categoryModel = new Category($this->db);
+        $category = $categoryModel->getById($id);
+        if($category) {
+            echo json_encode(['success' => true, 'category' => $category]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Không tìm thấy danh mục']);
+        }
+    }
+
+    public function saveCategory() {
+        $categoryModel = new Category($this->db);
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+            'image' => isset($_FILES['image']) ? $this->uploadImage('category') : ($_POST['image'] ?? null)
+        ];
+        if(isset($_POST['id']) && $_POST['id']) {
+            // Update
+            $result = $categoryModel->update($_POST['id'], $data);
+            $msg = $result ? 'Cập nhật thành công' : 'Cập nhật thất bại';
+        } else {
+            // Create
+            $result = $categoryModel->create($data);
+            $msg = $result ? 'Thêm thành công' : 'Thêm thất bại';
+        }
+        echo json_encode(['success' => $result, 'message' => $msg]);
+    }
+
+    public function deleteCategory() {
+        $categoryModel = new Category($this->db);
+        $result = false;
+        if(isset($_POST['id'])) {
+            $result = $categoryModel->delete($_POST['id']);
+        }
+        echo json_encode(['success' => $result]);
+    }
+
     private function handleProductForm() {
         $data = [
             'name' => $_POST['name'],
