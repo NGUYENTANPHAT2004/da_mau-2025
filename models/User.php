@@ -108,5 +108,11 @@ class User {
         
         return $stmt->execute();
     }
+    public function getUserWishlistItems($user_id, $limit = 10) {
+    $wishlist = new Wishlist($this->conn);
+    return $wishlist->getWishlistItems($user_id);
 }
+
+}
+
 ?>

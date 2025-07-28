@@ -37,25 +37,6 @@ class AdminController {
         include 'views/admin/dashboard.php';
         include 'views/layouts/footer.php';
     }
-
-    public function products() {
-        $action = 'admin_products';
-        if($_POST) {
-            // Xử lý thêm/sửa sản phẩm
-            $this->handleProductForm();
-        }
-        $limit = 20;
-        $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        if ($current_page < 1) $current_page = 1;
-        $offset = ($current_page - 1) * $limit;
-        $products = $this->product->getAll($limit, $offset);
-        $total_products = $this->product->getTotalCount();
-        $total_pages = ceil($total_products / $limit);
-        include 'views/layouts/header.php';
-        include 'views/admin/products.php';
-        include 'views/layouts/footer.php';
-    }
-
     public function articles() {
         $action = 'admin_articles';
         if($_POST) {
@@ -212,7 +193,8 @@ class AdminController {
         echo json_encode(['success' => $result]);
     }
 
-    private function handleProductForm() {
+  private function handleProductForm() {
+    try {
         $data = [
             'name' => $_POST['name'],
             'description' => $_POST['description'],
@@ -222,13 +204,19 @@ class AdminController {
             'quantity' => $_POST['quantity'],
             'image' => $this->uploadImage('product')
         ];
-        
-        if($this->product->create($data)) {
-            $success = "Thêm sản phẩm thành công!";
+
+        if ($this->product->create($data)) {
+            echo json_encode(['success' => true, 'message' => 'Thêm sản phẩm thành công!']);
         } else {
-            $error = "Có lỗi xảy ra!";
+            echo json_encode(['success' => false, 'message' => 'Không thể thêm sản phẩm']);
         }
+    } catch (Exception $e) {
+        error_log('Lỗi khi thêm sản phẩm: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
     }
+    exit;
+}
+
 
     private function handleArticleForm() {
         $data = [
@@ -264,5 +252,25 @@ class AdminController {
         }
         return null;
     }
+    public function products() {
+    $action = 'admin_products';
+    $productModel = new Product($this->db);
+    $categoryModel = new Category($this->db);
+
+    $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = 20;
+    $offset = ($current_page - 1) * $limit;
+
+    $products = $productModel->getAll($limit, $offset);
+    $categories = $categoryModel->getAll();
+    $total_products = $productModel->getTotalCount();
+    $total_pages = ceil($total_products / $limit);
+
+    include 'views/layouts/header.php';
+    include 'views/admin/products.php';
+    include 'views/layouts/footer.php';
 }
+
+}
+
 ?>
