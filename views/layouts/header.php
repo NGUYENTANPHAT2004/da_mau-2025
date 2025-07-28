@@ -10,6 +10,7 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -252,6 +253,20 @@
                         <?php endif; ?>
                     </a>
                 </li>
+                <?php if(isAdmin()): ?>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cogs me-1"></i>Quản trị
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>admin"><i class="fas fa-chart-bar me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>admin-products"><i class="fas fa-boxes me-2"></i>Quản lý sản phẩm</a></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>admin-orders"><i class="fas fa-shopping-cart me-2"></i>Quản lý đơn hàng</a></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>admin-articles"><i class="fas fa-newspaper me-2"></i>Quản lý bài viết</a></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>admin-categories"><i class="fas fa-list me-2"></i>Quản lý danh mục</a></li>
+                    </ul>
+                </li>
+                <?php endif; ?>
             </ul>
             
             <!-- Search Form -->

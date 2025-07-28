@@ -3,7 +3,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Quản lý sản phẩm</h2>
-                <button class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
                     <i class="fas fa-plus"></i> Thêm sản phẩm mới
                 </button>
             </div>
@@ -172,7 +172,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTitle">Thêm sản phẩm mới</h5>
-                <button type="button" class="close" data-dismiss="modal">
+                <button type="button" class="close" data-bs-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
@@ -236,7 +236,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                     <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
                 </div>
             </form>

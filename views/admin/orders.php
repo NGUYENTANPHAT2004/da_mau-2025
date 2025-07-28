@@ -159,7 +159,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Chi tiết đơn hàng #<span id="orderId"></span></h5>
-                <button type="button" class="close" data-dismiss="modal">
+                <button type="button" class="close" data-bs-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
@@ -167,7 +167,7 @@
                 <!-- Nội dung sẽ được load bằng AJAX -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 <button type="button" class="btn btn-success" onclick="printInvoiceFromModal()">
                     <i class="fas fa-print"></i> In hóa đơn
                 </button>

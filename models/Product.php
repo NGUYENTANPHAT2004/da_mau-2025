@@ -107,5 +107,13 @@ class Product {
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
+
+    public function getTotalCount() {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE status = 'active'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['total'] : 0;
+    }
 }
 ?>

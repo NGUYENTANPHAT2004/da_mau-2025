@@ -118,6 +118,11 @@ switch($action) {
         $controller->orders();
         break;
         
+    case 'admin-categories':
+        $controller = new AdminController();
+        $controller->categories();
+        break;
+        
     // Reviews
     case 'add-review':
         $controller = new ReviewController();
@@ -147,6 +152,22 @@ switch($action) {
         } else {
             redirect('articles');
         }
+        break;
+    
+    // Thêm route get-category
+    case 'get-category':
+        if($id) {
+            $controller = new AdminController();
+            $controller->getCategory($id);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'ID danh mục không hợp lệ']);
+        }
+        break;
+        
+    // Thêm route này nếu chưa có
+    case 'save-category':
+        $controller = new AdminController();
+        $controller->saveCategory();
         break;
         
     default:
