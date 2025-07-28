@@ -26,7 +26,13 @@ class AdminController {
         $monthly_revenue = $this->analytics->getMonthlyRevenue();
         $top_products = $this->analytics->getTopProducts(5);
         $recent_orders = $this->analytics->getRecentOrders(10);
-        
+
+        // Tách biến cho view
+        $total_revenue = $stats['total_revenue'] ?? 0;
+        $new_orders = $stats['today_orders'] ?? 0;
+        $total_products = $stats['total_products'] ?? 0;
+        $total_customers = $stats['total_customers'] ?? 0;
+
         include 'views/layouts/header.php';
         include 'views/admin/dashboard.php';
         include 'views/layouts/footer.php';

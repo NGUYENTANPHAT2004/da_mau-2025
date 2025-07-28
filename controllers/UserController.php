@@ -62,10 +62,15 @@ class UserController {
                 $error = "Mật khẩu xác nhận không khớp!";
             } elseif(strlen($password) < 6) {
                 $error = "Mật khẩu phải có ít nhất 6 ký tự!";
-            } elseif($this->user->register($fullname, $email, $password, $phone)) {
-                $success = "Đăng ký thành công! Vui lòng đăng nhập.";
             } else {
-                $error = "Email đã được sử dụng hoặc có lỗi xảy ra!";
+                $registerResult = $this->user->register($fullname, $email, $password, $phone);
+                if($registerResult === true) {
+                    $success = "Đăng ký thành công! Vui lòng đăng nhập.";
+                } elseif($registerResult === 'exists') {
+                    $error = "Email đã được sử dụng!";
+                } else {
+                    $error = "Có lỗi xảy ra khi đăng ký! Vui lòng thử lại.";
+                }
             }
         }
         
