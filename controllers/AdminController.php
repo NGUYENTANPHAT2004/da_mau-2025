@@ -1,10 +1,8 @@
 <?php
 class AdminController {
     private $db;
-    private $analytics;
     private $product;
-    private $article;
-    private $order;
+    private $category;
 
     public function __construct() {
         if(!isAdmin()) {
@@ -14,24 +12,28 @@ class AdminController {
         
         $database = new Database();
         $this->db = $database->getConnection();
-        $this->analytics = new Analytics($this->db);
         $this->product = new Product($this->db);
-        $this->article = new Article($this->db);
-        $this->order = new Order($this->db);
+        $this->category = new Category($this->db);
     }
 
     public function dashboard() {
         $action = 'admin';
-        $stats = $this->analytics->getDashboardStats();
-        $monthly_revenue = $this->analytics->getMonthlyRevenue();
-        $top_products = $this->analytics->getTopProducts(5);
-        $recent_orders = $this->analytics->getRecentOrders(10);
-
-        // Tách biến cho view
-        $total_revenue = $stats['total_revenue'] ?? 0;
-        $new_orders = $stats['today_orders'] ?? 0;
-        $total_products = $stats['total_products'] ?? 0;
-        $total_customers = $stats['total_customers'] ?? 0;
+        
+        // Lấy thống kê cơ bản
+        $total_products = $this->product->getTotalCount();
+        $total_categories = $this->category->getTotalCount();
+        
+        // Mock data cho dashboard - có thể thay thế bằng Analytics class sau
+        $total_revenue = 150000000;
+        $new_orders = 25;
+        $total_customers = 150;
+        $monthly_revenue = [
+            ['month' => 'Tháng 10', 'revenue' => 45000000],
+            ['month' => 'Tháng 11', 'revenue' => 52000000],
+            ['month' => 'Tháng 12', 'revenue' => 48000000],
+        ];
+        $top_products = [];
+        $recent_orders = [];
 
         include 'views/layouts/header.php';
         include 'views/admin/dashboard.php';
@@ -44,9 +46,20 @@ class AdminController {
         $limit = 20;
         $offset = ($current_page - 1) * $limit;
 
-        $products = $this->product->getAll($limit, $offset);
-        $categoryModel = new Category($this->db);
-        $categories = $categoryModel->getAll();
+        // Xử lý filter
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'category_id' => $_GET['category'] ?? '',
+            'status' => $_GET['status'] ?? ''
+        ];
+
+        if(array_filter($filters)) {
+            $products = $this->product->getFiltered($filters, $limit, $offset);
+        } else {
+            $products = $this->product->getAll($limit, $offset);
+        }
+
+        $categories = $this->category->getAll();
         $total_products = $this->product->getTotalCount();
         $total_pages = ceil($total_products / $limit);
 
@@ -57,44 +70,14 @@ class AdminController {
 
     public function categories() {
         $action = 'admin_categories';
-        $categoryModel = new Category($this->db);
-        $categories = $categoryModel->getAll();
+        $categories = $this->category->getAllWithProductCount();
         
         include 'views/layouts/header.php';
         include 'views/admin/categories.php';
         include 'views/layouts/footer.php';
     }
 
-    public function orders() {
-        $action = 'admin_orders';
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
-        
-        $orders = $this->order->getAll($limit, $offset);
-        $total_orders = $this->order->getTotalCount();
-        $total_pages = ceil($total_orders / $limit);
-        $current_page = $page;
-        
-        include 'views/layouts/header.php';
-        include 'views/admin/orders.php';
-        include 'views/layouts/footer.php';
-    }
-
-    public function articles() {
-        $action = 'admin_articles';
-        if($_POST) {
-            $this->handleArticleForm();
-        }
-        
-        $articles = $this->article->getAll(20);
-        
-        include 'views/layouts/header.php';
-        include 'views/admin/articles.php';
-        include 'views/layouts/footer.php';
-    }
-
-    // AJAX endpoints
+    // AJAX: Lấy thông tin danh mục
     public function getCategory() {
         header('Content-Type: application/json');
         $id = $_GET['id'] ?? null;
@@ -104,8 +87,7 @@ class AdminController {
             return;
         }
 
-        $categoryModel = new Category($this->db);
-        $category = $categoryModel->getById($id);
+        $category = $this->category->getById($id);
         
         if($category) {
             echo json_encode(['success' => true, 'category' => $category]);
@@ -114,6 +96,7 @@ class AdminController {
         }
     }
 
+    // AJAX: Lưu danh mục
     public function saveCategory() {
         header('Content-Type: application/json');
         
@@ -123,16 +106,20 @@ class AdminController {
         }
         
         // Validate input
-        $name = $_POST['name'] ?? '';
-        $description = $_POST['description'] ?? '';
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
         $id = $_POST['id'] ?? null;
         
-        if (empty(trim($name))) {
+        if (empty($name)) {
             echo json_encode(['success' => false, 'message' => 'Tên danh mục không được để trống']);
             return;
         }
         
-        $categoryModel = new Category($this->db);
+        // Kiểm tra tên danh mục đã tồn tại chưa
+        if($this->category->nameExists($name, $id)) {
+            echo json_encode(['success' => false, 'message' => 'Tên danh mục đã tồn tại']);
+            return;
+        }
         
         // Handle image upload
         $image = null;
@@ -144,25 +131,25 @@ class AdminController {
             }
         } else if ($id) {
             // Keep existing image for updates
-            $existing = $categoryModel->getById($id);
+            $existing = $this->category->getById($id);
             $image = $existing['image'] ?? null;
         }
         
         $data = [
-            'name' => trim($name),
-            'description' => trim($description),
+            'name' => $name,
+            'description' => $description,
             'image' => $image
         ];
         
         try {
             if ($id) {
-                if ($categoryModel->update($id, $data)) {
+                if ($this->category->update($id, $data)) {
                     echo json_encode(['success' => true, 'message' => 'Cập nhật danh mục thành công']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Không thể cập nhật danh mục']);
                 }
             } else {
-                if ($categoryModel->create($data)) {
+                if ($this->category->create($data)) {
                     echo json_encode(['success' => true, 'message' => 'Thêm danh mục thành công']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Không thể thêm danh mục']);
@@ -173,6 +160,7 @@ class AdminController {
         }
     }
 
+    // AJAX: Xóa danh mục
     public function deleteCategory() {
         header('Content-Type: application/json');
         
@@ -187,10 +175,11 @@ class AdminController {
             return;
         }
         
-        $categoryModel = new Category($this->db);
-        
         try {
-            if ($categoryModel->delete($id)) {
+            $result = $this->category->delete($id);
+            if ($result === false) {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa danh mục vì còn sản phẩm thuộc danh mục này']);
+            } elseif ($result) {
                 echo json_encode(['success' => true, 'message' => 'Xóa danh mục thành công']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Không thể xóa danh mục']);
@@ -200,6 +189,26 @@ class AdminController {
         }
     }
 
+    // AJAX: Lấy thông tin sản phẩm
+    public function getProduct() {
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? null;
+        
+        if(!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
+            return;
+        }
+
+        $product = $this->product->getById($id);
+        
+        if($product) {
+            echo json_encode(['success' => true, 'product' => $product]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Không tìm thấy sản phẩm']);
+        }
+    }
+
+    // AJAX: Lưu sản phẩm
     public function saveProduct() {
         header('Content-Type: application/json');
         
@@ -219,6 +228,18 @@ class AdminController {
 
         $id = $_POST['product_id'] ?? null;
         
+        // Validate price
+        if(!is_numeric($_POST['price']) || $_POST['price'] < 0) {
+            echo json_encode(['success' => false, 'message' => 'Giá sản phẩm không hợp lệ']);
+            return;
+        }
+        
+        // Validate quantity
+        if(!is_numeric($_POST['quantity']) || $_POST['quantity'] < 0) {
+            echo json_encode(['success' => false, 'message' => 'Số lượng không hợp lệ']);
+            return;
+        }
+
         // Handle image upload
         $image = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -262,24 +283,7 @@ class AdminController {
         }
     }
 
-    public function getProduct() {
-        header('Content-Type: application/json');
-        $id = $_GET['id'] ?? null;
-        
-        if(!$id) {
-            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
-            return;
-        }
-
-        $product = $this->product->getById($id);
-        
-        if($product) {
-            echo json_encode(['success' => true, 'product' => $product]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Không tìm thấy sản phẩm']);
-        }
-    }
-
+    // AJAX: Xóa sản phẩm
     public function deleteProduct() {
         header('Content-Type: application/json');
         
@@ -305,66 +309,7 @@ class AdminController {
         }
     }
 
-    public function updateOrderStatus() {
-        header('Content-Type: application/json');
-        
-        if (!isAdmin()) {
-            echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
-            return;
-        }
-
-        $order_id = $_POST['order_id'] ?? null;
-        $status = $_POST['status'] ?? null;
-
-        if (!$order_id || !$status) {
-            echo json_encode(['success' => false, 'message' => 'Dữ liệu không hợp lệ']);
-            return;
-        }
-
-        $valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-        if (!in_array($status, $valid_statuses)) {
-            echo json_encode(['success' => false, 'message' => 'Trạng thái không hợp lệ']);
-            return;
-        }
-
-        try {
-            if ($this->order->updateStatus($order_id, $status)) {
-                echo json_encode(['success' => true, 'message' => 'Cập nhật trạng thái thành công']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Không thể cập nhật trạng thái']);
-            }
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
-        }
-    }
-
-    private function handleArticleForm() {
-        if (!isset($_POST['title']) || !isset($_POST['content'])) {
-            return;
-        }
-
-        $image = null;
-        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $image = $this->uploadImage('article');
-        }
-
-        $data = [
-            'title' => trim($_POST['title']),
-            'content' => $_POST['content'],
-            'excerpt' => trim($_POST['excerpt'] ?? ''),
-            'category' => $_POST['category'] ?? 'news',
-            'featured' => isset($_POST['featured']) ? 1 : 0,
-            'author_id' => $_SESSION['user_id'],
-            'image' => $image
-        ];
-        
-        if($this->article->create($data)) {
-            $success = "Thêm bài viết thành công!";
-        } else {
-            $error = "Có lỗi xảy ra!";
-        }
-    }
-
+    // Upload image helper
     private function uploadImage($type) {
         $uploadDir = "uploads/{$type}s/";
         
