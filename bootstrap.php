@@ -33,4 +33,25 @@ require_once ROOT_PATH . '/controllers/AdminController.php';
 require_once ROOT_PATH . '/controllers/ReviewController.php';
 require_once ROOT_PATH . '/controllers/UserController.php';
 require_once ROOT_PATH . '/controllers/CartController.php';
+require_once ROOT_PATH . '/models/Notification.php';
+require_once ROOT_PATH . '/controllers/SearchController.php';
+require_once ROOT_PATH . '/controllers/NotificationController.php';
+require_once ROOT_PATH . '/controllers/PageController.php';
+require_once ROOT_PATH . '/controllers/PWAController.php';
+require_once ROOT_PATH . '/controllers/ApiController.php';
+
+// Helper function to send notifications
+function sendNotification($user_id, $type, $title, $message, $data = []) {
+    $database = new Database();
+    $db = $database->getConnection();
+    $notification = new Notification($db);
+    
+    return $notification->create([
+        'user_id' => $user_id,
+        'type' => $type,
+        'title' => $title,
+        'message' => $message,
+        'data' => json_encode($data)
+    ]);
+}
 ?> 
