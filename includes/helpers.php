@@ -64,6 +64,12 @@ function isAdmin() {
  * Redirect đến trang khác
  */
 function redirect($url) {
+    // Nếu URL không bắt đầu bằng http, thêm BASE_URL
+    if(!preg_match('/^https?:\/\//', $url)) {
+        if(strpos($url, BASE_URL) !== 0) {
+            $url = BASE_URL . $url;
+        }
+    }
     header("Location: " . $url);
     exit();
 }
@@ -163,4 +169,67 @@ function uploadFile($file, $destination, $allowedTypes = ['jpg', 'jpeg', 'png', 
     
     return false;
 }
-?> 
+
+/**
+ * Get current cart count for logged in user
+ */
+function getCartCount() {
+    if(!isLoggedIn()) {
+        return 0;
+    }
+    
+    try {
+        $database = new Database();
+        $db = $database->getConnection();
+        $cart = new Cart($db);
+        return $cart->getCartItemCount($_SESSION['user_id']);
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+
+/**
+ * Show alert message
+ */
+function showAlert($message, $type = 'info') {
+    $_SESSION['alert'] = [
+        'message' => $message,
+        'type' => $type
+    ];
+}
+
+/**
+ * Get and clear alert message
+ */
+function getAlert() {
+    if(isset($_SESSION['alert'])) {
+        $alert = $_SESSION['alert'];
+        unset($_SESSION['alert']);
+        return $alert;
+    }
+    return null;
+}
+
+/**
+ * Validate form data
+ */
+function validateRequired($data, $fields) {
+    $errors = [];
+    foreach($fields as $field => $label) {
+        if(empty($data[$field])) {
+            $errors[] = "$label là bắt buộc";
+        }
+    }
+    return $errors;
+}
+
+/**
+ * Clean data for output
+ */
+function clean($data) {
+    if(is_array($data)) {
+        return array_map('clean', $data);
+    }
+    return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+}
+?>

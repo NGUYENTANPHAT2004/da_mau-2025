@@ -37,17 +37,31 @@ class AdminController {
         include 'views/admin/dashboard.php';
         include 'views/layouts/footer.php';
     }
-    public function articles() {
-        $action = 'admin_articles';
-        if($_POST) {
-            // Xử lý thêm/sửa bài viết
-            $this->handleArticleForm();
-        }
-        
-        $articles = $this->article->getAll(20);
+
+    public function products() {
+        $action = 'admin_products';
+        $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 20;
+        $offset = ($current_page - 1) * $limit;
+
+        $products = $this->product->getAll($limit, $offset);
+        $categoryModel = new Category($this->db);
+        $categories = $categoryModel->getAll();
+        $total_products = $this->product->getTotalCount();
+        $total_pages = ceil($total_products / $limit);
+
+        include 'views/layouts/header.php';
+        include 'views/admin/products.php';
+        include 'views/layouts/footer.php';
+    }
+
+    public function categories() {
+        $action = 'admin_categories';
+        $categoryModel = new Category($this->db);
+        $categories = $categoryModel->getAll();
         
         include 'views/layouts/header.php';
-        include 'views/admin/articles.php';
+        include 'views/admin/categories.php';
         include 'views/layouts/footer.php';
     }
 
@@ -60,24 +74,39 @@ class AdminController {
         $orders = $this->order->getAll($limit, $offset);
         $total_orders = $this->order->getTotalCount();
         $total_pages = ceil($total_orders / $limit);
+        $current_page = $page;
         
         include 'views/layouts/header.php';
         include 'views/admin/orders.php';
         include 'views/layouts/footer.php';
     }
 
-    public function categories() {
-        $action = 'admin_categories';
-        $categoryModel = new Category($this->db);
-        $categories = $categoryModel->getAll();
+    public function articles() {
+        $action = 'admin_articles';
+        if($_POST) {
+            $this->handleArticleForm();
+        }
+        
+        $articles = $this->article->getAll(20);
+        
         include 'views/layouts/header.php';
-        include 'views/admin/categories.php';
+        include 'views/admin/articles.php';
         include 'views/layouts/footer.php';
     }
 
-    public function getCategory($id) {
+    // AJAX endpoints
+    public function getCategory() {
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? null;
+        
+        if(!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
+            return;
+        }
+
         $categoryModel = new Category($this->db);
         $category = $categoryModel->getById($id);
+        
         if($category) {
             echo json_encode(['success' => true, 'category' => $category]);
         } else {
@@ -86,147 +115,247 @@ class AdminController {
     }
 
     public function saveCategory() {
-        // Kiểm tra quyền admin
+        header('Content-Type: application/json');
+        
         if (!isAdmin()) {
             echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
             return;
         }
         
-        // Debug: Log dữ liệu nhận được
-        error_log('POST data: ' . print_r($_POST, true));
-        error_log('FILES data: ' . print_r($_FILES, true));
-        
-        $db = new Database();
-        $category = new Category($db->getConnection());
-        
-        $id = $_POST['id'] ?? null;
+        // Validate input
         $name = $_POST['name'] ?? '';
         $description = $_POST['description'] ?? '';
-        $existingImage = $_POST['existing_image'] ?? '';
+        $id = $_POST['id'] ?? null;
         
-        if (empty($name)) {
+        if (empty(trim($name))) {
             echo json_encode(['success' => false, 'message' => 'Tên danh mục không được để trống']);
             return;
         }
         
-        // Xử lý tải lên hình ảnh
-        $image = $existingImage;
+        $categoryModel = new Category($this->db);
+        
+        // Handle image upload
+        $image = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-            $uploadDir = 'uploads/categories/';
-            
-            // Tạo thư mục nếu nó không tồn tại
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            
-            $fileName = time() . '_' . basename($_FILES['image']['name']);
-            $targetFile = $uploadDir . $fileName;
-            
-            $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
-            
-            // Kiểm tra xem tệp hình ảnh có phải là hình ảnh thực sự không
-            $check = getimagesize($_FILES['image']['tmp_name']);
-            if ($check === false) {
-                echo json_encode(['success' => false, 'message' => 'File không phải là hình ảnh']);
+            $image = $this->uploadImage('category');
+            if (!$image) {
+                echo json_encode(['success' => false, 'message' => 'Không thể tải lên hình ảnh']);
                 return;
             }
-            
-            // Kiểm tra kích thước tệp (giới hạn 2MB)
-            if ($_FILES['image']['size'] > 2000000) {
-                echo json_encode(['success' => false, 'message' => 'Kích thước file quá lớn (tối đa 2MB)']);
-                return;
-            }
-            
-            // Cho phép một số định dạng tệp nhất định
-            if ($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif") {
-                echo json_encode(['success' => false, 'message' => 'Chỉ chấp nhận file JPG, JPEG, PNG & GIF']);
-                return;
-            }
-            
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                $image = $fileName;
-                
-                // Xóa hình ảnh cũ nếu tồn tại và một hình ảnh mới được tải lên
-                if (!empty($existingImage) && $id && file_exists($uploadDir . $existingImage)) {
-                    unlink($uploadDir . $existingImage);
-                }
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Có lỗi khi tải lên hình ảnh']);
-                return;
-            }
+        } else if ($id) {
+            // Keep existing image for updates
+            $existing = $categoryModel->getById($id);
+            $image = $existing['image'] ?? null;
         }
         
         $data = [
-            'name' => $name,
-            'description' => $description,
+            'name' => trim($name),
+            'description' => trim($description),
             'image' => $image
         ];
         
         try {
             if ($id) {
-                // Cập nhật danh mục hiện có
-                if ($category->update($id, $data)) {
+                if ($categoryModel->update($id, $data)) {
                     echo json_encode(['success' => true, 'message' => 'Cập nhật danh mục thành công']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Không thể cập nhật danh mục']);
                 }
             } else {
-                // Tạo danh mục mới
-                if ($category->create($data)) {
+                if ($categoryModel->create($data)) {
                     echo json_encode(['success' => true, 'message' => 'Thêm danh mục thành công']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Không thể thêm danh mục']);
                 }
             }
         } catch (Exception $e) {
-            error_log('Error in saveCategory: ' . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
         }
     }
 
     public function deleteCategory() {
-        $categoryModel = new Category($this->db);
-        $result = false;
-        if(isset($_POST['id'])) {
-            $result = $categoryModel->delete($_POST['id']);
+        header('Content-Type: application/json');
+        
+        if (!isAdmin()) {
+            echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
+            return;
         }
-        echo json_encode(['success' => $result]);
+        
+        $id = $_POST['id'] ?? null;
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
+            return;
+        }
+        
+        $categoryModel = new Category($this->db);
+        
+        try {
+            if ($categoryModel->delete($id)) {
+                echo json_encode(['success' => true, 'message' => 'Xóa danh mục thành công']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa danh mục']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+        }
     }
 
-  private function handleProductForm() {
-    try {
+    public function saveProduct() {
+        header('Content-Type: application/json');
+        
+        if (!isAdmin()) {
+            echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
+            return;
+        }
+
+        // Validate required fields
+        $required_fields = ['name', 'price', 'category_id', 'quantity'];
+        foreach ($required_fields as $field) {
+            if (empty($_POST[$field])) {
+                echo json_encode(['success' => false, 'message' => 'Vui lòng điền đầy đủ thông tin bắt buộc']);
+                return;
+            }
+        }
+
+        $id = $_POST['product_id'] ?? null;
+        
+        // Handle image upload
+        $image = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+            $image = $this->uploadImage('product');
+            if (!$image) {
+                echo json_encode(['success' => false, 'message' => 'Không thể tải lên hình ảnh']);
+                return;
+            }
+        } else if ($id) {
+            // Keep existing image for updates
+            $existing = $this->product->getById($id);
+            $image = $existing['image'] ?? null;
+        }
+
         $data = [
-            'name' => $_POST['name'],
-            'description' => $_POST['description'],
-            'price' => $_POST['price'],
-            'sale_price' => $_POST['sale_price'] ?? null,
-            'category_id' => $_POST['category_id'],
-            'quantity' => $_POST['quantity'],
-            'image' => $this->uploadImage('product')
+            'name' => trim($_POST['name']),
+            'description' => trim($_POST['description']),
+            'price' => (float)$_POST['price'],
+            'sale_price' => !empty($_POST['sale_price']) ? (float)$_POST['sale_price'] : null,
+            'category_id' => (int)$_POST['category_id'],
+            'quantity' => (int)$_POST['quantity'],
+            'image' => $image
         ];
 
-        if ($this->product->create($data)) {
-            echo json_encode(['success' => true, 'message' => 'Thêm sản phẩm thành công!']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Không thể thêm sản phẩm']);
+        try {
+            if ($id) {
+                if ($this->product->update($id, $data)) {
+                    echo json_encode(['success' => true, 'message' => 'Cập nhật sản phẩm thành công']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Không thể cập nhật sản phẩm']);
+                }
+            } else {
+                if ($this->product->create($data)) {
+                    echo json_encode(['success' => true, 'message' => 'Thêm sản phẩm thành công']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Không thể thêm sản phẩm']);
+                }
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
         }
-    } catch (Exception $e) {
-        error_log('Lỗi khi thêm sản phẩm: ' . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
     }
-    exit;
-}
 
+    public function getProduct() {
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? null;
+        
+        if(!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
+            return;
+        }
+
+        $product = $this->product->getById($id);
+        
+        if($product) {
+            echo json_encode(['success' => true, 'product' => $product]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Không tìm thấy sản phẩm']);
+        }
+    }
+
+    public function deleteProduct() {
+        header('Content-Type: application/json');
+        
+        if (!isAdmin()) {
+            echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
+            return;
+        }
+        
+        $id = $_POST['product_id'] ?? null;
+        if (!$id) {
+            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
+            return;
+        }
+        
+        try {
+            if ($this->product->delete($id)) {
+                echo json_encode(['success' => true, 'message' => 'Xóa sản phẩm thành công']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể xóa sản phẩm']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+        }
+    }
+
+    public function updateOrderStatus() {
+        header('Content-Type: application/json');
+        
+        if (!isAdmin()) {
+            echo json_encode(['success' => false, 'message' => 'Không có quyền truy cập']);
+            return;
+        }
+
+        $order_id = $_POST['order_id'] ?? null;
+        $status = $_POST['status'] ?? null;
+
+        if (!$order_id || !$status) {
+            echo json_encode(['success' => false, 'message' => 'Dữ liệu không hợp lệ']);
+            return;
+        }
+
+        $valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+        if (!in_array($status, $valid_statuses)) {
+            echo json_encode(['success' => false, 'message' => 'Trạng thái không hợp lệ']);
+            return;
+        }
+
+        try {
+            if ($this->order->updateStatus($order_id, $status)) {
+                echo json_encode(['success' => true, 'message' => 'Cập nhật trạng thái thành công']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Không thể cập nhật trạng thái']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()]);
+        }
+    }
 
     private function handleArticleForm() {
+        if (!isset($_POST['title']) || !isset($_POST['content'])) {
+            return;
+        }
+
+        $image = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+            $image = $this->uploadImage('article');
+        }
+
         $data = [
-            'title' => $_POST['title'],
+            'title' => trim($_POST['title']),
             'content' => $_POST['content'],
-            'excerpt' => $_POST['excerpt'],
-            'category' => $_POST['category'],
+            'excerpt' => trim($_POST['excerpt'] ?? ''),
+            'category' => $_POST['category'] ?? 'news',
             'featured' => isset($_POST['featured']) ? 1 : 0,
             'author_id' => $_SESSION['user_id'],
-            'image' => $this->uploadImage('article')
+            'image' => $image
         ];
         
         if($this->article->create($data)) {
@@ -237,40 +366,33 @@ class AdminController {
     }
 
     private function uploadImage($type) {
-        if(isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-            $uploadDir = "uploads/{$type}s/";
-            if(!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            
-            $fileName = time() . '_' . $_FILES['image']['name'];
-            $uploadPath = $uploadDir . $fileName;
-            
-            if(move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-                return $fileName;
-            }
+        $uploadDir = "uploads/{$type}s/";
+        
+        // Create directory if it doesn't exist
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
         }
-        return null;
+        
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+        $fileExtension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        
+        if (!in_array($fileExtension, $allowedTypes)) {
+            return false;
+        }
+        
+        // Check file size (max 2MB)
+        if ($_FILES['image']['size'] > 2 * 1024 * 1024) {
+            return false;
+        }
+        
+        $fileName = time() . '_' . uniqid() . '.' . $fileExtension;
+        $uploadPath = $uploadDir . $fileName;
+        
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
+            return $fileName;
+        }
+        
+        return false;
     }
-    public function products() {
-    $action = 'admin_products';
-    $productModel = new Product($this->db);
-    $categoryModel = new Category($this->db);
-
-    $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $limit = 20;
-    $offset = ($current_page - 1) * $limit;
-
-    $products = $productModel->getAll($limit, $offset);
-    $categories = $categoryModel->getAll();
-    $total_products = $productModel->getTotalCount();
-    $total_pages = ceil($total_products / $limit);
-
-    include 'views/layouts/header.php';
-    include 'views/admin/products.php';
-    include 'views/layouts/footer.php';
 }
-
-}
-
 ?>

@@ -14,18 +14,18 @@
             <div class="col-lg-2 mb-4">
                 <h6>Danh mục</h6>
                 <ul class="list-unstyled">
-                    <li><a href="#" class="text-white-50">Điện thoại</a></li>
-                    <li><a href="#" class="text-white-50">Laptop</a></li>
-                    <li><a href="#" class="text-white-50">Tablet</a></li>
-                    <li><a href="#" class="text-white-50">Phụ kiện</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>products?category=1" class="text-white-50">Điện thoại</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>products?category=2" class="text-white-50">Laptop</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>products?category=3" class="text-white-50">Tablet</a></li>
+                    <li><a href="<?php echo BASE_URL; ?>products?category=4" class="text-white-50">Phụ kiện</a></li>
                 </ul>
             </div>
             
             <div class="col-lg-3 mb-4">
                 <h6>Hỗ trợ khách hàng</h6>
                 <ul class="list-unstyled">
-                    <li><a href="#" class="text-white-50">Hotline: 1900 1234</a></li>
-                    <li><a href="#" class="text-white-50">Email: support@fpolyshop.com</a></li>
+                    <li><a href="tel:19001234" class="text-white-50">Hotline: 1900 1234</a></li>
+                    <li><a href="mailto:support@fpolyshop.com" class="text-white-50">Email: support@fpolyshop.com</a></li>
                     <li><a href="#" class="text-white-50">Chính sách đổi trả</a></li>
                     <li><a href="#" class="text-white-50">Hướng dẫn mua hàng</a></li>
                 </ul>
@@ -35,8 +35,8 @@
                 <h6>Đăng ký nhận tin</h6>
                 <p class="text-white-50">Nhận thông tin về sản phẩm mới và khuyến mãi</p>
                 <div class="input-group">
-                    <input type="email" class="form-control" placeholder="Email của bạn">
-                    <button class="btn btn-primary" type="button">
+                    <input type="email" class="form-control" placeholder="Email của bạn" id="newsletterEmail">
+                    <button class="btn btn-primary" type="button" onclick="subscribeNewsletter()">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -58,98 +58,244 @@
     </div>
 </footer>
 
-<!-- jQuery (phải được tải trước Bootstrap JS) -->
-
 <!-- Bootstrap JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
 <!-- Custom JavaScript -->
 <script>
-// Smooth scrolling
+// Global variables
+const BASE_URL = '<?php echo BASE_URL; ?>';
+
+// Show alert messages
+<?php $alert = getAlert(); if($alert): ?>
+    showAlert('<?php echo $alert["message"]; ?>', '<?php echo $alert["type"]; ?>');
+<?php endif; ?>
+
+// Utility functions
+function showAlert(message, type = 'info') {
+    const alertClass = type === 'error' ? 'danger' : type;
+    const alertHtml = `
+        <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Insert at top of main content
+    const mainContent = document.querySelector('.container');
+    if(mainContent) {
+        mainContent.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if(alert) {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }
+        }, 5000);
+    }
+}
+
+// Cart functions
+function updateCartCount() {
+    if(typeof BASE_URL === 'undefined') return;
+    
+    fetch(BASE_URL + 'get-cart-count')
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                const countElement = document.querySelector('.cart-count');
+                if(countElement) {
+                    countElement.textContent = data.count;
+                    countElement.style.display = data.count > 0 ? 'inline' : 'none';
+                }
+            }
+        })
+        .catch(error => console.log('Error updating cart count:', error));
+}
+
+// Add to cart function
+function addToCart(productId, quantity = 1) {
+    const formData = new FormData();
+    formData.append('product_id', productId);
+    formData.append('quantity', quantity);
+    
+    fetch(BASE_URL + 'add-to-cart', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            showAlert(data.message, 'success');
+            updateCartCount();
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra!', 'error');
+    });
+}
+
+// Form submission helper
+function submitForm(formId, url, callback) {
+    const form = document.getElementById(formId);
+    if(!form) return;
+    
+    const formData = new FormData(form);
+    
+    fetch(BASE_URL + url, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(callback) callback(data);
+        else {
+            if(data.success) {
+                showAlert(data.message, 'success');
+            } else {
+                showAlert(data.message, 'error');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra!', 'error');
+    });
+}
+
+// Newsletter subscription
+function subscribeNewsletter() {
+    const email = document.getElementById('newsletterEmail').value;
+    if(!email || !isValidEmail(email)) {
+        showAlert('Vui lòng nhập email hợp lệ', 'error');
+        return;
+    }
+    
+    showAlert('Cảm ơn bạn đã đăng ký nhận tin!', 'success');
+    document.getElementById('newsletterEmail').value = '';
+}
+
+// Email validation
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Smooth scrolling for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
+        const target = document.querySelector(this.getAttribute('href'));
+        if(target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
     });
 });
 
-// Add to cart animation
-function addToCartAnimation(button) {
-    const originalText = button.innerHTML;
-    button.innerHTML = '<div class="spinner"></div>';
-    button.disabled = true;
-    
-    setTimeout(() => {
-        button.innerHTML = '<i class="fas fa-check me-2"></i>Đã thêm';
-        button.classList.remove('btn-cart');
-        button.classList.add('btn-success');
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('btn-success');
-            button.classList.add('btn-cart');
-            button.disabled = false;
-        }, 2000);
-    }, 1000);
-}
-
 // Form validation
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    const inputs = form.querySelectorAll('input[required]');
-    let isValid = true;
+document.addEventListener('DOMContentLoaded', function() {
+    // Add validation to forms
+    const forms = document.querySelectorAll('form[data-validate]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if(!validateForm(this)) {
+                e.preventDefault();
+            }
+        });
+    });
     
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+    
+    // Update cart count on page load
+    updateCartCount();
+});
+
+function validateForm(form) {
+    let isValid = true;
+    const requiredFields = form.querySelectorAll('[required]');
+    
+    requiredFields.forEach(field => {
+        if(!field.value.trim()) {
+            field.classList.add('is-invalid');
             isValid = false;
         } else {
-            input.classList.remove('is-invalid');
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        }
+    });
+    
+    // Email validation
+    const emailFields = form.querySelectorAll('input[type="email"]');
+    emailFields.forEach(field => {
+        if(field.value && !isValidEmail(field.value)) {
+            field.classList.add('is-invalid');
+            isValid = false;
         }
     });
     
     return isValid;
 }
 
-// Search suggestion
-function setupSearchSuggestion() {
-    const searchInput = document.querySelector('input[name="search"]');
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            // Implement search suggestion logic here
-        });
+// Loading state helper
+function setLoading(element, loading = true) {
+    if(loading) {
+        element.disabled = true;
+        element.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+    } else {
+        element.disabled = false;
+        element.innerHTML = element.dataset.originalText || 'Submit';
     }
 }
 
-// Initialize components
-document.addEventListener('DOMContentLoaded', function() {
-    setupSearchSuggestion();
-    
-    // Animate elements on scroll
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('fade-in');
-            }
-        });
-    });
-    
-    document.querySelectorAll('.product-card').forEach(card => {
-        observer.observe(card);
-    });
-});
-
-// Alert auto-hide
+// Auto-hide alerts
 setTimeout(() => {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
-        alert.style.transition = 'opacity 0.5s';
-        alert.style.opacity = '0';
-        setTimeout(() => alert.remove(), 500);
+        if(!alert.classList.contains('alert-permanent')) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => {
+                if(alert.parentNode) {
+                    alert.remove();
+                }
+            }, 500);
+        }
     });
 }, 5000);
+
+// Back to top button
+window.addEventListener('scroll', function() {
+    const backToTop = document.getElementById('backToTop');
+    if(backToTop) {
+        if(window.scrollY > 300) {
+            backToTop.style.display = 'block';
+        } else {
+            backToTop.style.display = 'none';
+        }
+    }
+});
+
+// Image lazy loading fallback
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('img[data-src]');
+    images.forEach(img => {
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+    });
+});
 </script>
 
 </body>
